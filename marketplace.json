@@ -1,0 +1,16 @@
+{
+  "label": "Flow Chart",
+  "category_label": "plug-ins",
+  "branding": {
+    "tagline": "Flow Chart"
+  },
+  "constants": {
+    "vis_label": {
+        "label": "Flow Chart",
+    },
+    "vis_id": {
+        "label": "flow-chart",
+        "value_constraint": "visualization"
+    }
+  }
+}
