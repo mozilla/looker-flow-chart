@@ -1,4 +1,4 @@
-import graph_objects from 'plotly.js';
+import Plotly from 'plotly.js-dist-min';
 
 const vis = {
   options: {
@@ -59,10 +59,7 @@ const vis = {
   },
 
   create (element, config) {
-    // TODO: styles in here?
-    // TODO: move some general setup to this fn?
 
-    
   },
 
   updateAsync (data, element, config, queryResponse, details, done) {
@@ -127,11 +124,6 @@ const vis = {
       config.flow = config.flow || Object.values(dim_options[2])[0];
       config.weight = config.weight || Object.values(measure_options[0])[0];
     }
-    const sourceObj = [...queryResponse.fields.dimension_like, ...queryResponse.fields.measure_like].filter(f => f.name === config.source);
-    let sourceType = "";
-    if (sourceObj.length > 0) {
-      sourceType = xObj[0].type;
-    }
 
     const d3data = data.flatMap((row) => {
         return {
@@ -149,9 +141,15 @@ const vis = {
     const width = element.clientWidth;
     const height = element.clientHeight;
 
-    const ctxElem = `<canvas id="vis-chart" width="${width}" height="${height}"></canvas>`;
-    element.innerHTML = ctxElem;
-    this.ctx = document.getElementById('vis-chart');
+    const colorPalette = this.options.color_palette;
+
+    function getLinkColor(linkId) {
+      if (typeof colorPalette.default !== 'undefined') {
+        return colorPalette.default[linkId % colorPalette.default.length];
+      }
+
+      return "light gray";
+    }
 
     const nodes = d3data.flatMap((d) => {
       return [d.source, d.target]
@@ -169,28 +167,34 @@ const vis = {
     const flows = d3data.flatMap((d) => {
       return d.flow
     });
+    const uniqueFlows = flows.filter((value, index, array) => array.indexOf(value) === index);
+    const linkColors = d3data.flatMap((d) => {
+      return getLinkColor(uniqueFlows.indexOf(d.flow))
+    });
+
 
     var data = {
       type: "sankey",
       orientation: "h",
+      arrangement: 'snap',
       node: {
         pad: 15,
-        thickness: 30,
-        line: {
-          color: "black",
-          width: 0.5
-        },
-    
+        thickness: 50,  
         label: labels,
-      //  color: ["blue", "blue", "blue", "blue", "blue", "blue"]
-    
+        color: "gray",
+        hovertemplate: '%{label} <br />Total count: %{value} <br />Incoming Flows: <extra></extra>',
       },
     
       link: {
+        arrowlen: 15,
         source: sources,
         target: targets,
         value: weights,
-        label: flows
+        label: flows,
+        color: linkColors,
+        hovertemplate: '%{source.label} → %{target.label}<br />'+
+        'Flow: %{label}<br />'+
+        'Value: %{value}',
       }
     }
     
@@ -201,8 +205,8 @@ const vis = {
         size: 10
       }
     }
-    
-    const chart = Plotly.react(this.ctx, data, layout);
+   
+    Plotly.newPlot("vis", data, layout);
 
     done();
   },
