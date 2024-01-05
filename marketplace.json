@@ -6,7 +6,7 @@
   },
   "constants": {
     "vis_label": {
-        "label": "Flow Chart",
+        "label": "Flow Chart"
     },
     "vis_id": {
         "label": "flow-chart",
