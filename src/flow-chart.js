@@ -41,6 +41,7 @@ const vis = {
       type: "array",
       label: "Color Palette",
       display: "colors",
+      order: 1,
       default: [ // these are the defaults from Looker
         '#3FE1B0',
         '#0060E0',
@@ -56,6 +57,32 @@ const vis = {
         '#A7341F',
       ]
     },
+    show_arrows: {
+      section: "Series",
+      type: "boolean",
+      label: "Show Links as Arrows",
+      display: "toggle",
+      order: 2,
+      default: true
+    },
+    link_tooltip_format: {
+      section: "Series",
+      type: "string",
+      label: "Link Tooltip Format",
+      display: "text",
+      order: 3,
+      placeholder: '%{source.label} → %{target.label}<br />'+
+      'Flow: %{label}<br />'+
+      'Value: %{value}',
+    },
+    node_tooltip_format: {
+      section: "Series",
+      type: "string",
+      label: "Node Tooltip Format",
+      display: "text",
+      order: 3,
+      placeholder: '%{label} <br />Total count: %{value} <br />Incoming Flows: <extra></extra>',
+    }
   },
 
   create (element, config) {
@@ -215,19 +242,23 @@ const vis = {
           thickness: 50,  
           label: labels,
           color: "gray",
-          hovertemplate: '%{label} <br />Total count: %{value} <br />Incoming Flows: <extra></extra>',
+          hovertemplate: !!!config.node_tooltip_format ? 
+            '%{label} <br />Total count: %{value} <br />Incoming Flows: <extra></extra>' : 
+            config.node_tooltip_format,
         },
       
         link: {
-          arrowlen: 15,
+          arrowlen: config.show_arrows ? 15 : 0,
           source: sources,
           target: targets,
           value: weights,
           label: visibleFlows,
           color: linkColors,
-          hovertemplate: '%{source.label} → %{target.label}<br />'+
+          hovertemplate: !!!config.link_tooltip_format ? 
+          '%{source.label} → %{target.label}<br />'+
           'Flow: %{label}<br />'+
-          'Value: %{value}',
+          'Value: %{value}' :
+          config.link_tooltip_format,
         }
       }
 
