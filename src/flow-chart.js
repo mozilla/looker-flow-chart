@@ -151,62 +151,138 @@ const vis = {
       return "light gray";
     }
 
-    const nodes = d3data.flatMap((d) => {
-      return [d.source, d.target]
-    });
-    const labels = nodes.filter((value, index, array) => array.indexOf(value) === index);
-    const sources = d3data.flatMap((d) => {
-      return labels.indexOf(d.source)
-    });
-    const targets = d3data.flatMap((d) => {
-      return labels.indexOf(d.target)
-    });
-    const weights = d3data.flatMap((d) => {
-      return d.weight
-    });
     const flows = d3data.flatMap((d) => {
       return d.flow
     });
     const uniqueFlows = flows.filter((value, index, array) => array.indexOf(value) === index);
-    const linkColors = d3data.flatMap((d) => {
-      return getLinkColor(uniqueFlows.indexOf(d.flow))
-    });
 
+    var deselectedItems = new Set();
 
-    var data = {
-      type: "sankey",
-      orientation: "h",
-      arrangement: 'snap',
-      node: {
-        pad: 15,
-        thickness: 50,  
-        label: labels,
-        color: "gray",
-        hovertemplate: '%{label} <br />Total count: %{value} <br />Incoming Flows: <extra></extra>',
-      },
-    
-      link: {
-        arrowlen: 15,
-        source: sources,
-        target: targets,
-        value: weights,
-        label: flows,
-        color: linkColors,
-        hovertemplate: '%{source.label} → %{target.label}<br />'+
-        'Flow: %{label}<br />'+
-        'Value: %{value}',
+    function getData() {
+      const visibleFlows = d3data.flatMap((d) => {
+        if (deselectedItems.has(d.flow)) {
+          return [];
+        } else {
+          return d.flow
+        } 
+      });
+
+      const nodes = d3data.flatMap((d) => {
+        if (deselectedItems.has(d.flow)) {
+          return [];
+        } else {
+          return [d.source, d.target]
+        } 
+      });
+      const labels = nodes.filter((value, index, array) => array.indexOf(value) === index);
+      const sources = d3data.flatMap((d) => {
+        if (deselectedItems.has(d.flow)) {
+          return [];
+        } else {
+          return labels.indexOf(d.source)
+        } 
+      });
+      const targets = d3data.flatMap((d) => {
+        if (deselectedItems.has(d.flow)) {
+          return [];
+        } else {
+          return labels.indexOf(d.target)
+        } 
+      });
+      const weights = d3data.flatMap((d) => {
+        if (deselectedItems.has(d.flow)) {
+          return [];
+        } else {
+          return d.weight
+        } 
+      });
+
+      const linkColors = d3data.flatMap((d) => {
+        if (deselectedItems.has(d.flow)) {
+          return [];
+        } else {
+          return getLinkColor(uniqueFlows.indexOf(d.flow))
+        }
+      });
+
+      var data = {
+        type: "sankey",
+        orientation: "h",
+        arrangement: 'snap',
+
+        node: {
+          pad: 15,
+          thickness: 50,  
+          label: labels,
+          color: "gray",
+          hovertemplate: '%{label} <br />Total count: %{value} <br />Incoming Flows: <extra></extra>',
+        },
+      
+        link: {
+          arrowlen: 15,
+          source: sources,
+          target: targets,
+          value: weights,
+          label: visibleFlows,
+          color: linkColors,
+          hovertemplate: '%{source.label} → %{target.label}<br />'+
+          'Flow: %{label}<br />'+
+          'Value: %{value}',
+        }
       }
-    }
-    
-    var data = [data]
+
+      var legend = uniqueFlows.flatMap((flow) => {
+        return {
+          x: [null], 
+          y: [null],
+          type: 'scatter',
+          mode: 'markers',
+        
+          marker: {
+            color: getLinkColor(uniqueFlows.indexOf(flow)),
+            size: 10,
+          },
+          name: flow,
+          visible: deselectedItems.has(flow) ? "legendonly" : true
+        }
+      });
+      
+      var data = [data];
+      var data = data.concat(legend);
+      return data;
+    } 
     
     var layout = {
       font: {
         size: 10
-      }
+      },
+      xaxis: {visible: false},
+      yaxis: {visible: false},
+      showlegend: true,
+		  legend: {"orientation": "h"}
     }
+
+    redrawPlot();
    
-    Plotly.newPlot("vis", data, layout);
+    function redrawPlot() {
+      Plotly.newPlot("vis", getData(), layout);
+      var plot = document.getElementById('vis');
+
+      plot.on('plotly_restyle', function(e){
+          let flow = uniqueFlows[e[1] - 1];
+
+          if (e[0]["visible"][0] == true) {
+            // show trace
+            deselectedItems.delete(flow);
+          } else {
+            // hide trace
+            deselectedItems.add(flow);
+          }
+
+          redrawPlot();
+      
+      });
+    }
 
     done();
   },
