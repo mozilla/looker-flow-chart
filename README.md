@@ -1,6 +1,24 @@
 # Looker Flow Chart
 
-> Work in progress
+Looker visualization for flow data analysis. 
+
+![Flow chart screenshot](https://github.com/mozilla/looker-flow-chart/raw/main/docs/screenshot.png)
+
+## Usage
+
+Select "Flow Chart" as the visualization in Looker. 
+The general structure of the results data is expected to have different nodes and links in between these nodes. 
+The weight/value of these links can vary. Additionally, traces across the visualized graph can be grouped into flows.
+
+The visualization expects 4 fields in the results data:
+* Source Field: starting node
+* Target Field: target node
+* Weight Field: value associated with the link that is represented through the source-target field pair
+* Flow Field: ID or unique value to indicate that the link belongs to a specific flow. A flow usually consists of multiple links
+
+![Flow chart settings](https://github.com/mozilla/looker-flow-chart/raw/main/docs/settings.png)
+
+Additional configuration options to change to color and style of the flow chart, as well as tooltips are available in the "Series" tab.
 
 ## Development
 
